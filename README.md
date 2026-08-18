@@ -23,6 +23,20 @@ It is a lumpsum dip assistant and SIP companion — not a broker, not a stock pi
 - Daily “cron” = **WorkManager** (plus a retry). Notifications = **system NotificationManager** (local). No FCM server required for v1.
 - A private web panel that inspired the behaviour is **reference only**. Do not couple releases.
 
+## Build and run
+
+Requires JDK 17 and an Android SDK with platform 37 and build-tools 37. Point Gradle at them via
+`local.properties` (`sdk.dir=...`) and `JAVA_HOME`.
+
+```bash
+./gradlew :app:testDebugUnitTest   # dip score, clustering, cooldown, SIP allotment
+./gradlew :app:installDebug        # debug build onto the connected device
+```
+
+Stack: Kotlin with AGP built-in Kotlin support, Jetpack Compose + Material 3, minSdk 26, Room, Hilt,
+WorkManager, OkHttp, kotlinx.serialization. Charts are drawn with Compose Canvas, so there is no
+charting dependency to keep in step.
+
 ## Read in this order
 
 1. [docs/01-product.md](docs/01-product.md)

@@ -1,0 +1,69 @@
+{
+  "catalogAsOf": "2026-08-18",
+  "funds": [
+    {
+      "schemeCode": 153094,
+      "name": "Quantum Ethical Fund — Direct Plan Growth",
+      "shortName": "Quantum Ethical",
+      "amc": "Quantum Asset Management Company Pvt Ltd",
+      "isin": "INF082J01473",
+      "mandate": "Open-ended equity scheme investing in companies that clear an ethical set of principles. Benchmark: Nifty 500 Shariah TRI.",
+      "shariahStatus": "unreviewed",
+      "shariahNotes": "AMFI \"Ethical\" naming only. Not reviewed against a Shariah board ruling."
+    },
+    {
+      "schemeCode": 119172,
+      "name": "Tata Ethical Fund — Direct Plan Growth",
+      "shortName": "Tata Ethical",
+      "amc": "Tata Asset Management Ltd",
+      "isin": null,
+      "mandate": "Open-ended equity scheme following Shariah principles; no interest-bearing instruments, preference shares, options or short selling. Benchmark: Nifty 500 Shariah TRI.",
+      "shariahStatus": "unreviewed",
+      "shariahNotes": "Scheme documents state Shariah screening. Personal screen only, not a fatwa."
+    },
+    {
+      "schemeCode": 118876,
+      "name": "Taurus Ethical Fund — Direct Plan Growth",
+      "shortName": "Taurus Ethical",
+      "amc": "Taurus Asset Management Company Ltd",
+      "isin": null,
+      "mandate": "Thematic equity scheme investing in a diversified portfolio based on Shariah / ethical principles. Benchmark: BSE 500 Shariah TRI.",
+      "shariahStatus": "unreviewed",
+      "shariahNotes": "AMFI \"Ethical\" naming only. Not reviewed against a Shariah board ruling."
+    },
+    {
+      "schemeCode": 153895,
+      "name": "The Wealth Company Ethical Fund — Direct Growth",
+      "shortName": "Wealth Company Ethical",
+      "amc": "Wealth Company Asset Management Holdings Pvt Ltd",
+      "isin": null,
+      "mandate": "Open-ended equity scheme screened on an ethical set of principles.",
+      "shariahStatus": "unreviewed",
+      "shariahNotes": "Newer scheme; limited history. Personal screen only."
+    },
+    {
+      "schemeCode": 154197,
+      "name": "UTI Nifty500 Shariah Index Fund — Direct Plan Growth",
+      "shortName": "UTI Nifty500 Shariah",
+      "amc": "UTI Asset Management Co Ltd",
+      "isin": null,
+      "mandate": "Index fund replicating the Nifty500 Shariah index. Passive Shariah-screened exposure.",
+      "shariahStatus": "unreviewed",
+      "shariahNotes": "Tracks an index provider's Shariah screen, not a Shariah-board certificate."
+    }
+  ],
+  "metals": [
+    {
+      "id": "gold",
+      "name": "Gold",
+      "unit": "₹ per 10g (24K)",
+      "dropThresholdRupees": 10000.0
+    },
+    {
+      "id": "silver",
+      "name": "Silver",
+      "unit": "₹ per kg",
+      "dropThresholdRupees": 0.0
+    }
+  ]
+}

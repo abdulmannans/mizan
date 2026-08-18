@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Mizan means balance. Filled shapes rather than strokes so the mark stays solid at launcher size,
+  and everything sits inside the 66dp adaptive-icon safe circle so no mask shape clips a pan.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path
+        android:pathData="M54,28m-4.5,0a4.5,4.5 0,1 0,9 0a4.5,4.5 0,1 0,-9 0"
+        android:fillColor="#ECFDF5" />
+    <path
+        android:pathData="M28,34 H80 A3,3 0 0 1 80,40 H28 A3,3 0 0 1 28,34 Z"
+        android:fillColor="#ECFDF5" />
+    <path
+        android:pathData="M51.5,32 H56.5 V80 H51.5 Z"
+        android:fillColor="#ECFDF5" />
+    <path
+        android:pathData="M40,80 H68 A3,3 0 0 1 68,86 H40 A3,3 0 0 1 40,80 Z"
+        android:fillColor="#ECFDF5" />
+
+    <path
+        android:pathData="M23,52 A11,11 0 0 0 45,52 Z"
+        android:fillColor="#34D399" />
+    <path
+        android:pathData="M63,52 A11,11 0 0 0 85,52 Z"
+        android:fillColor="#34D399" />
+    <path
+        android:pathData="M33,40 H35 V52 H33 Z"
+        android:fillColor="#34D399" />
+    <path
+        android:pathData="M73,40 H75 V52 H73 Z"
+        android:fillColor="#34D399" />
+</vector>

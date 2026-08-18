@@ -1,0 +1,606 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "e483a2aecf5c0d279d85cbeae599176d",
+    "entities": [
+      {
+        "tableName": "funds",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`schemeCode` INTEGER NOT NULL, `name` TEXT NOT NULL, `shortName` TEXT NOT NULL, `amc` TEXT NOT NULL, `isin` TEXT, `mandate` TEXT NOT NULL, `catalogAsOf` TEXT NOT NULL, `shariahStatus` TEXT NOT NULL, `shariahNotes` TEXT, `active` INTEGER NOT NULL, `trackingEnabled` INTEGER NOT NULL, `lastNav` REAL, `navAsOf` INTEGER, `growth1d` REAL, `growth1m` REAL, `growth1y` REAL, PRIMARY KEY(`schemeCode`))",
+        "fields": [
+          {
+            "fieldPath": "schemeCode",
+            "columnName": "schemeCode",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "shortName",
+            "columnName": "shortName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "amc",
+            "columnName": "amc",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isin",
+            "columnName": "isin",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "mandate",
+            "columnName": "mandate",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "catalogAsOf",
+            "columnName": "catalogAsOf",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "shariahStatus",
+            "columnName": "shariahStatus",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "shariahNotes",
+            "columnName": "shariahNotes",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "active",
+            "columnName": "active",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "trackingEnabled",
+            "columnName": "trackingEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastNav",
+            "columnName": "lastNav",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "navAsOf",
+            "columnName": "navAsOf",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "growth1d",
+            "columnName": "growth1d",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "growth1m",
+            "columnName": "growth1m",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "growth1y",
+            "columnName": "growth1y",
+            "affinity": "REAL"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "schemeCode"
+          ]
+        }
+      },
+      {
+        "tableName": "fund_prices",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`schemeCode` INTEGER NOT NULL, `priceDate` INTEGER NOT NULL, `nav` REAL NOT NULL, PRIMARY KEY(`schemeCode`, `priceDate`))",
+        "fields": [
+          {
+            "fieldPath": "schemeCode",
+            "columnName": "schemeCode",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "priceDate",
+            "columnName": "priceDate",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nav",
+            "columnName": "nav",
+            "affinity": "REAL",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "schemeCode",
+            "priceDate"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_fund_prices_schemeCode",
+            "unique": false,
+            "columnNames": [
+              "schemeCode"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_fund_prices_schemeCode` ON `${TABLE_NAME}` (`schemeCode`)"
+          }
+        ]
+      },
+      {
+        "tableName": "investment_signals",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`schemeCode` INTEGER NOT NULL, `signalDate` INTEGER NOT NULL, `score` INTEGER NOT NULL, `level` TEXT NOT NULL, `nav` REAL NOT NULL, `componentsJson` TEXT NOT NULL, `reasonsJson` TEXT NOT NULL, PRIMARY KEY(`schemeCode`, `signalDate`))",
+        "fields": [
+          {
+            "fieldPath": "schemeCode",
+            "columnName": "schemeCode",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "signalDate",
+            "columnName": "signalDate",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "score",
+            "columnName": "score",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "level",
+            "columnName": "level",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nav",
+            "columnName": "nav",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "componentsJson",
+            "columnName": "componentsJson",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reasonsJson",
+            "columnName": "reasonsJson",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "schemeCode",
+            "signalDate"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_investment_signals_schemeCode",
+            "unique": false,
+            "columnNames": [
+              "schemeCode"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_investment_signals_schemeCode` ON `${TABLE_NAME}` (`schemeCode`)"
+          },
+          {
+            "name": "index_investment_signals_score",
+            "unique": false,
+            "columnNames": [
+              "score"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_investment_signals_score` ON `${TABLE_NAME}` (`score`)"
+          }
+        ]
+      },
+      {
+        "tableName": "watchlist",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`schemeCode` INTEGER NOT NULL, `sipAmount` REAL, `sipDayOfMonth` INTEGER, `addedAt` INTEGER NOT NULL, PRIMARY KEY(`schemeCode`))",
+        "fields": [
+          {
+            "fieldPath": "schemeCode",
+            "columnName": "schemeCode",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sipAmount",
+            "columnName": "sipAmount",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "sipDayOfMonth",
+            "columnName": "sipDayOfMonth",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "addedAt",
+            "columnName": "addedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "schemeCode"
+          ]
+        }
+      },
+      {
+        "tableName": "metals",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `unit` TEXT NOT NULL, `dropThresholdRupees` REAL NOT NULL, `lastPrice` REAL, `priceAsOf` INTEGER, `growth1d` REAL, `growth1m` REAL, `growth1y` REAL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "unit",
+            "columnName": "unit",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dropThresholdRupees",
+            "columnName": "dropThresholdRupees",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastPrice",
+            "columnName": "lastPrice",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "priceAsOf",
+            "columnName": "priceAsOf",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "growth1d",
+            "columnName": "growth1d",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "growth1m",
+            "columnName": "growth1m",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "growth1y",
+            "columnName": "growth1y",
+            "affinity": "REAL"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "metal_prices",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`metalId` TEXT NOT NULL, `priceDate` INTEGER NOT NULL, `price` REAL NOT NULL, PRIMARY KEY(`metalId`, `priceDate`))",
+        "fields": [
+          {
+            "fieldPath": "metalId",
+            "columnName": "metalId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "priceDate",
+            "columnName": "priceDate",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "price",
+            "columnName": "price",
+            "affinity": "REAL",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "metalId",
+            "priceDate"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_metal_prices_metalId",
+            "unique": false,
+            "columnNames": [
+              "metalId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_metal_prices_metalId` ON `${TABLE_NAME}` (`metalId`)"
+          }
+        ]
+      },
+      {
+        "tableName": "metal_signals",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`metalId` TEXT NOT NULL, `signalDate` INTEGER NOT NULL, `score` INTEGER NOT NULL, `level` TEXT NOT NULL, `price` REAL NOT NULL, `componentsJson` TEXT NOT NULL, `reasonsJson` TEXT NOT NULL, PRIMARY KEY(`metalId`, `signalDate`))",
+        "fields": [
+          {
+            "fieldPath": "metalId",
+            "columnName": "metalId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "signalDate",
+            "columnName": "signalDate",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "score",
+            "columnName": "score",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "level",
+            "columnName": "level",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "price",
+            "columnName": "price",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "componentsJson",
+            "columnName": "componentsJson",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reasonsJson",
+            "columnName": "reasonsJson",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "metalId",
+            "signalDate"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_metal_signals_metalId",
+            "unique": false,
+            "columnNames": [
+              "metalId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_metal_signals_metalId` ON `${TABLE_NAME}` (`metalId`)"
+          }
+        ]
+      },
+      {
+        "tableName": "benchmark_prices",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`priceDate` INTEGER NOT NULL, `close` REAL NOT NULL, PRIMARY KEY(`priceDate`))",
+        "fields": [
+          {
+            "fieldPath": "priceDate",
+            "columnName": "priceDate",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "close",
+            "columnName": "close",
+            "affinity": "REAL",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "priceDate"
+          ]
+        }
+      },
+      {
+        "tableName": "notification_log",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `type` TEXT NOT NULL, `targetId` TEXT NOT NULL, `title` TEXT NOT NULL, `body` TEXT NOT NULL, `sentAt` INTEGER NOT NULL, `sentOn` INTEGER NOT NULL, `score` INTEGER, `level` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "targetId",
+            "columnName": "targetId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "body",
+            "columnName": "body",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sentAt",
+            "columnName": "sentAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sentOn",
+            "columnName": "sentOn",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "score",
+            "columnName": "score",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "level",
+            "columnName": "level",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_notification_log_type",
+            "unique": false,
+            "columnNames": [
+              "type"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_notification_log_type` ON `${TABLE_NAME}` (`type`)"
+          },
+          {
+            "name": "index_notification_log_targetId",
+            "unique": false,
+            "columnNames": [
+              "targetId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_notification_log_targetId` ON `${TABLE_NAME}` (`targetId`)"
+          }
+        ]
+      },
+      {
+        "tableName": "job_runs",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `jobName` TEXT NOT NULL, `startedAt` INTEGER NOT NULL, `finishedAt` INTEGER, `status` TEXT NOT NULL, `error` TEXT, `fundsFetched` INTEGER NOT NULL, `signalsWritten` INTEGER NOT NULL, `notifiesPosted` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "jobName",
+            "columnName": "jobName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startedAt",
+            "columnName": "startedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "finishedAt",
+            "columnName": "finishedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "error",
+            "columnName": "error",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "fundsFetched",
+            "columnName": "fundsFetched",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "signalsWritten",
+            "columnName": "signalsWritten",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notifiesPosted",
+            "columnName": "notifiesPosted",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e483a2aecf5c0d279d85cbeae599176d')"
+    ]
+  }
+}
