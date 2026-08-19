@@ -5,5 +5,4 @@
 .gradle/
 build/
 local.properties
-*.apk
 google-services.json
