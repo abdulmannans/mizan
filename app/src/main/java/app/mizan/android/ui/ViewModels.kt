@@ -38,9 +38,17 @@ class OnboardingViewModel @Inject constructor(
 
     fun createChannels() = notifier.createChannels()
 
-    fun acknowledgeAndStart(displayName: String) {
+    fun acknowledgeAndStart(
+        displayName: String,
+        notifyFundDips: Boolean,
+        notifyMetalDips: Boolean,
+        notifyGoldDrop: Boolean,
+    ) {
         viewModelScope.launch {
             if (displayName.isNotBlank()) settings.setDisplayName(displayName.trim())
+            settings.setNotifyFundDips(notifyFundDips)
+            settings.setNotifyMetalDips(notifyMetalDips)
+            settings.setNotifyGoldDrop(notifyGoldDrop)
             settings.acknowledgeDisclaimer()
             MizanScheduler.startBackfill(context)
         }
@@ -122,9 +130,6 @@ class FundDetailViewModel @Inject constructor(
         viewModelScope.launch { repository.toggleWatchlist(schemeCode, watchlisted) }
     }
 
-    fun saveSip(amount: Double?, dayOfMonth: Int?) {
-        viewModelScope.launch { repository.saveSip(schemeCode, amount, dayOfMonth) }
-    }
 }
 
 @HiltViewModel
@@ -143,9 +148,6 @@ class WatchlistViewModel @Inject constructor(
         viewModelScope.launch { repository.removeFromWatchlist(row.fund.schemeCode) }
     }
 
-    fun saveSip(schemeCode: Long, amount: Double?, dayOfMonth: Int?) {
-        viewModelScope.launch { repository.saveSip(schemeCode, amount, dayOfMonth) }
-    }
 }
 
 @HiltViewModel
@@ -225,15 +227,35 @@ class AccountViewModel @Inject constructor(
 /** Decides between onboarding and the main shell, and keeps channels registered. */
 @HiltViewModel
 class RootViewModel @Inject constructor(
-    settings: SettingsRepository,
+    private val settings: SettingsRepository,
+    private val repository: MizanRepository,
     notifier: MizanNotifier,
+    private val context: Context,
 ) : ViewModel() {
 
     init {
         notifier.createChannels()
+        viewModelScope.launch { autoRefreshIfStale() }
+    }
+
+    private suspend fun autoRefreshIfStale() {
+        val prefs = settings.current()
+        if (!prefs.disclaimerAcknowledged || !prefs.backfillCompleted) return
+        val latestNavDate = repository.latestFundNavDate() ?: return
+        val hoursSinceNav = java.time.Duration.between(
+            latestNavDate.atStartOfDay(),
+            app.mizan.android.core.IndiaClock.now(),
+        ).toHours()
+        if (hoursSinceNav > STALE_HOURS) {
+            MizanScheduler.refreshNow(context)
+        }
     }
 
     val acknowledged: StateFlow<Boolean?> = settings.settings
         .map { it.disclaimerAcknowledged }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    private companion object {
+        const val STALE_HOURS = 18L
+    }
 }

@@ -1,18 +1,20 @@
 package app.mizan.android.ui.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -22,24 +24,25 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import app.mizan.android.core.Compliance
 import app.mizan.android.core.Formatters
-import app.mizan.android.data.db.JOB_STATUS_SUCCESS
 import app.mizan.android.data.repo.FundRow
 import app.mizan.android.data.repo.HomeState
 import app.mizan.android.ui.HomeViewModel
-import app.mizan.android.ui.components.DisclaimerChip
+import app.mizan.android.ui.components.ComplianceChip
+import app.mizan.android.ui.components.DataRow
 import app.mizan.android.ui.components.DisclaimerDialog
 import app.mizan.android.ui.components.EmptyState
-import app.mizan.android.ui.components.FootnoteText
-import app.mizan.android.ui.components.KeyValueRow
+import app.mizan.android.ui.components.EntityRow
 import app.mizan.android.ui.components.LevelBadge
-import app.mizan.android.ui.components.SectionCard
-import app.mizan.android.ui.components.StatTile
+import app.mizan.android.ui.components.MizanCard
+import app.mizan.android.ui.components.SectionHeader
+import app.mizan.android.ui.components.Stat
+import app.mizan.android.ui.components.StatStrip
+import app.mizan.android.ui.theme.Shapes
+import app.mizan.android.ui.theme.Space
+import app.mizan.android.ui.theme.TextRole
 
 @Composable
 fun HomeScreen(
@@ -61,8 +64,8 @@ fun HomeScreen(
     ) {
         LazyColumn(
             Modifier.fillMaxSize(),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(Space.lg),
+            verticalArrangement = Arrangement.spacedBy(Space.md),
         ) {
             item {
                 val greeting = home.settings.displayName.takeIf { it.isNotBlank() }
@@ -70,179 +73,203 @@ fun HomeScreen(
                 Column {
                     Text(greeting, style = MaterialTheme.typography.headlineSmall)
                     Text(
-                        "SIP first. Extra cash on dips.",
-                        style = MaterialTheme.typography.bodyMedium,
+                        "Market dip alerts for smart investing.",
+                        style = TextRole.secondary,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
 
-            item { DisclaimerChip(onRead = { showDisclaimer = true }) }
+            item { ComplianceChip(onRead = { showDisclaimer = true }) }
 
             if (ui.backfillRunning) {
                 item {
-                    EmptyState(
-                        "Loading NAV history in the background. Scores and missed dips fill in as it runs."
-                    )
+                    Banner("Loading NAV history. Scores and missed dips fill in as it runs.")
                 }
             }
 
-            item { CountsCard(home) }
+            item { RefreshStatusBanner(home) }
 
-            item { MissedCard(home, onOpenMissed) }
+            item { TodayHeadline(home) }
 
             item {
-                SectionCard(title = "Watchlist today") {
-                    if (home.watchlistToday.isEmpty()) {
-                        EmptyState("Add funds from Funds.")
-                        Spacer(Modifier.height(8.dp))
-                        TextButton(onClick = onOpenFunds) { Text("Open Funds") }
-                    } else {
-                        Column {
-                            home.watchlistToday.forEachIndexed { index, row ->
-                                if (index > 0) HorizontalDivider(Modifier.padding(vertical = 8.dp))
-                                WatchlistTodayRow(row, home, onOpenFund)
-                            }
+                SectionHeader(
+                    "Watchlist today",
+                    trailing = {
+                        if (home.watchlistToday.isNotEmpty()) {
+                            TextButton(onClick = onOpenFunds) { Text("Add") }
                         }
-                    }
-                }
-            }
-
-            if (home.nextSip != null) {
-                item {
-                    val sip = home.nextSip
-                    SectionCard(title = "Next SIP") {
-                        Column {
-                            KeyValueRow("Fund", sip.fundName)
-                            KeyValueRow("Amount", Formatters.money(sip.amount))
-                            KeyValueRow("Debit day", "${sip.debitDay} (${Formatters.date(sip.debitDate)})")
-                            KeyValueRow(
-                                "Estimated allotment",
-                                Formatters.date(sip.allotmentDate),
-                            )
-                            KeyValueRow(
-                                "Allotment NAV vs chart NAV",
-                                "${Formatters.nav(sip.estimatedAllotmentNav)} vs ${Formatters.nav(sip.latestNav)}",
-                            )
-                            Spacer(Modifier.height(8.dp))
-                            FootnoteText(Compliance.SIP_ALLOTMENT_HELPER)
-                        }
-                    }
-                }
-            }
-
-            item { LastUpdateCard(home) }
-
-            item {
-                FootnoteText(Compliance.DISCLAIMER)
-                Spacer(Modifier.height(24.dp))
-            }
-        }
-    }
-}
-
-@Composable
-private fun CountsCard(home: HomeState) {
-    SectionCard {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            StatTile("Tracked funds", Formatters.count(home.trackedFunds), modifier = Modifier.weight(1f))
-            StatTile("Watchlist", Formatters.count(home.watchlistCount), modifier = Modifier.weight(1f))
-            StatTile(
-                "Signals 7d",
-                Formatters.count(home.signalsLast7Days),
-                subtitle = "65+",
-                modifier = Modifier.weight(1f),
-            )
-        }
-        Spacer(Modifier.height(12.dp))
-        HorizontalDivider()
-        Spacer(Modifier.height(12.dp))
-        StatTile(
-            label = "Gold (₹/10g)",
-            value = Formatters.money(home.gold?.metal?.lastPrice),
-            subtitle = "Silver ₹/kg ${Formatters.money(home.silver?.metal?.lastPrice)}",
-        )
-        Spacer(Modifier.height(6.dp))
-        FootnoteText(Compliance.METAL_QUOTES)
-    }
-}
-
-@Composable
-private fun MissedCard(home: HomeState, onOpenMissed: () -> Unit) {
-    val totals = home.missedTotals
-    SectionCard(
-        title = "Missed deploys",
-        trailing = { TextButton(onClick = onOpenMissed) { Text("View") } },
-        modifier = Modifier.clickable { onOpenMissed() },
-    ) {
-        if (totals == null || totals.deploys == 0) {
-            EmptyState("No attractive scores (65+) on your watchlist yet.")
-        } else {
-            Column {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    StatTile("Deploys", Formatters.count(totals.deploys), modifier = Modifier.weight(1f))
-                    StatTile(
-                        "Hypothetical P&L",
-                        Formatters.moneySigned(totals.suggestedPnl),
-                        subtitle = Formatters.percentSigned(totals.suggestedPnlPercent),
-                        modifier = Modifier.weight(1.4f),
-                    )
-                }
-                Spacer(Modifier.height(10.dp))
-                KeyValueRow(
-                    "If ₹10k each → value today",
-                    Formatters.money(totals.whatIfValueToday),
+                    },
                 )
-                Spacer(Modifier.height(6.dp))
-                FootnoteText(Compliance.HYPOTHETICAL)
             }
+
+            item {
+                if (home.watchlistToday.isEmpty()) {
+                    Column {
+                        EmptyState("Add funds from Funds to see them here.")
+                        Spacer(Modifier.height(Space.sm))
+                        TextButton(onClick = onOpenFunds) { Text("Open Funds") }
+                    }
+                } else {
+                    MizanCard {
+                        home.watchlistToday.forEachIndexed { index, row ->
+                            if (index > 0) HorizontalDivider()
+                            WatchlistTodayRow(row, home, onOpenFund)
+                        }
+                    }
+                }
+            }
+
+            item { MissedSummary(home, onOpenMissed) }
+
+            item { Snapshot(home) }
+
+            item { LastUpdate(home) }
+
+            item { Spacer(Modifier.height(Space.xl)) }
         }
+    }
+}
+
+@Composable
+private fun RefreshStatusBanner(home: HomeState) {
+    val job = home.lastJob
+    val attractive = home.watchlistToday.count { it.attractiveNow }
+    val summary = when {
+        job == null -> "No data yet. Pull to refresh or wait for the first update."
+        !job.succeeded -> "Last update failed. Pull to refresh."
+        attractive > 0 -> "$attractive fund${if (attractive > 1) "s" else ""} attractive. Updated ${Formatters.dateTime(job.at)}"
+        else -> "All calm. Updated ${Formatters.dateTime(job.at)}"
+    }
+    val isError = job != null && !job.succeeded
+    Banner(text = summary, error = isError)
+}
+
+/** The one question Home exists to answer. */
+@Composable
+private fun TodayHeadline(home: HomeState) {
+    val attractive = home.watchlistToday.filter { it.attractiveNow }
+    val suggested = attractive.sumOf { it.suggestedRupees(home.settings.availableLumpsum) ?: 0.0 }
+    MizanCard {
+        Text(
+            when {
+                home.watchlistToday.isEmpty() -> "Nothing tracked yet"
+                attractive.isEmpty() -> "Nothing to act on today"
+                attractive.size == 1 -> "1 fund is attractive today"
+                else -> "${attractive.size} funds are attractive today"
+            },
+            style = TextRole.figure,
+        )
+        Spacer(Modifier.height(Space.xs))
+        Text(
+            when {
+                home.watchlistToday.isEmpty() ->
+                    "Star a fund in Funds and Mizan starts scoring it against its own history."
+                attractive.isEmpty() -> "Scores are below 65. No action needed today."
+                else -> "Suggested extra lumpsum ${Formatters.money(suggested)} from your pool."
+            },
+            style = TextRole.body,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun MissedSummary(home: HomeState, onOpenMissed: () -> Unit) {
+    val totals = home.missedTotals
+    MizanCard {
+        EntityRow(
+            title = "Missed deploys",
+            subtitle = if (totals == null || totals.deploys == 0) {
+                "No attractive scores (65+) on your watchlist yet"
+            } else {
+                "${Formatters.count(totals.deploys)} clustered · " +
+                    "${Formatters.moneySigned(totals.suggestedPnl)} hypothetical · " +
+                    "₹10k each would be ${Formatters.money(totals.whatIfValueToday)}"
+            },
+            onClick = onOpenMissed,
+            trailing = {
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+            },
+        )
+    }
+}
+
+@Composable
+private fun Snapshot(home: HomeState) {
+    MizanCard {
+        StatStrip(
+            listOf(
+                Stat("Tracked", Formatters.count(home.trackedFunds)),
+                Stat("Watchlist", Formatters.count(home.watchlistCount)),
+                Stat("Signals 7d", Formatters.count(home.signalsLast7Days), "65+"),
+            )
+        )
+        Spacer(Modifier.height(Space.sm))
+        HorizontalDivider()
+        DataRow("Gold ₹/10g", Formatters.money(home.gold?.metal?.lastPrice))
+        DataRow("Silver ₹/kg", Formatters.money(home.silver?.metal?.lastPrice))
     }
 }
 
 @Composable
 private fun WatchlistTodayRow(row: FundRow, home: HomeState, onOpenFund: (Long) -> Unit) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .clickable { onOpenFund(row.fund.schemeCode) },
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(row.fund.shortName, style = MaterialTheme.typography.bodyLarge)
-            Text(
-                if (row.attractiveNow) {
-                    "Attractive now · suggested ${Formatters.money(row.suggestedRupees(home.settings.availableLumpsum))}"
-                } else {
-                    "Not attractive today"
-                },
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        LevelBadge(row.level, row.score)
+    EntityRow(
+        title = row.fund.shortName,
+        subtitle = if (row.attractiveNow) {
+            "Attractive · suggested " +
+                Formatters.money(row.suggestedRupees(home.settings.availableLumpsum))
+        } else {
+            "Not attractive today"
+        },
+        onClick = { onOpenFund(row.fund.schemeCode) },
+        trailing = { LevelBadge(row.level, row.score) },
+    )
+}
+
+/** One line when the pipeline is healthy, a banner only when it is not. */
+@Composable
+private fun LastUpdate(home: HomeState) {
+    val job = home.lastJob
+    val failed = job != null && !job.succeeded
+    if (failed || home.stale) {
+        Banner(
+            text = when {
+                failed -> job.error ?: "The last update did not complete. Pull to refresh."
+                else -> "Prices may be old. Pull to refresh."
+            },
+            error = failed,
+        )
+    } else {
+        Text(
+            "Updated ${Formatters.dateTime(job?.at)}",
+            style = TextRole.caption,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = Space.xs),
+        )
     }
 }
 
 @Composable
-private fun LastUpdateCard(home: HomeState) {
-    SectionCard(title = "Last update") {
-        val job = home.lastJob
-        Column {
-            KeyValueRow("Finished", Formatters.dateTime(job?.at))
-            KeyValueRow("Status", job?.status ?: "never run")
-            if (job != null && job.status != JOB_STATUS_SUCCESS) {
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    job.error ?: "The last run did not complete.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                )
-            }
-            if (home.stale) {
-                Spacer(Modifier.height(6.dp))
-                FootnoteText("Prices may be old. Pull to refresh.")
-            }
-        }
+private fun Banner(text: String, error: Boolean = false) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = Shapes.field,
+        color = if (error) {
+            MaterialTheme.colorScheme.errorContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant
+        },
+    ) {
+        Text(
+            text,
+            style = TextRole.secondary,
+            color = if (error) {
+                MaterialTheme.colorScheme.onErrorContainer
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+            modifier = Modifier.padding(Space.md),
+        )
     }
 }

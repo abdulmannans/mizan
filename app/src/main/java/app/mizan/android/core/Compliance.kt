@@ -15,7 +15,7 @@ object Compliance {
 
     const val HYPOTHETICAL =
         "Hypothetical only. No trades are recorded and nothing here was earned. The fund can fall " +
-            "further. Continue SIPs independently of this overlay."
+            "further."
 
     const val METAL_QUOTES =
         "Mumbai-style quotes. Excludes making charges and GST."
@@ -24,12 +24,9 @@ object Compliance {
         "AMFI \"Ethical/Shariah\" in the scheme name is a marketing classification, not a " +
             "Shariah-board certificate."
 
-    const val SIP_ALLOTMENT_HELPER =
-        "Units usually allot 2-3 business days after the debit, not on the debit date."
-
     const val OVERLAY_NEEDS_CASH =
         "Dip top-ups only work with ring-fenced extra cash. If a crash cannot be funded, the " +
-            "overlay is worthless -- keep the SIP running instead."
+            "overlay is worthless."
 
     const val PRIVACY =
         "Watchlist, NAV history and scores stay on this device. There is no account server. " +

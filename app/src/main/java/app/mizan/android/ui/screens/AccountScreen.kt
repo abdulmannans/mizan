@@ -1,5 +1,7 @@
 package app.mizan.android.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,9 +15,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -29,18 +36,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import app.mizan.android.core.Compliance
 import app.mizan.android.core.Formatters
+import app.mizan.android.ui.AccountUiState
 import app.mizan.android.ui.AccountViewModel
+import app.mizan.android.ui.components.DataRow
 import app.mizan.android.ui.components.FootnoteText
-import app.mizan.android.ui.components.KeyValueRow
-import app.mizan.android.ui.components.SectionCard
+import app.mizan.android.ui.components.MizanCard
+import app.mizan.android.ui.components.SectionHeader
+import app.mizan.android.ui.theme.Shapes
+import app.mizan.android.ui.theme.Space
+import app.mizan.android.ui.theme.TextRole
 
 @Composable
 fun AccountScreen(
@@ -64,165 +75,195 @@ fun AccountScreen(
     ) { padding ->
         LazyColumn(
             Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(Space.lg),
+            verticalArrangement = Arrangement.spacedBy(Space.md),
         ) {
+            item { SectionHeader("Sizing") }
+
             item {
-                SectionCard(title = "You") {
+                MizanCard {
                     EditableField(
                         label = "Display name",
                         initial = state.settings.displayName,
                         numeric = false,
-                        onCommit = { viewModel.setDisplayName(it) },
+                        onCommit = viewModel::setDisplayName,
+                    )
+                    Spacer(Modifier.height(Space.md))
+                    EditableField(
+                        label = "Available lumpsum pool (₹)",
+                        initial = "%.0f".format(state.settings.availableLumpsum),
+                        numeric = true,
+                        onCommit = { it.toDoubleOrNull()?.let(viewModel::setLumpsum) },
+                    )
+                    Spacer(Modifier.height(Space.md))
+                    EditableField(
+                        label = "What-if lumpsum (₹)",
+                        initial = "%.0f".format(state.settings.whatIfAmount),
+                        numeric = true,
+                        onCommit = { it.toDoubleOrNull()?.let(viewModel::setWhatIf) },
+                    )
+                    Spacer(Modifier.height(Space.md))
+                    FootnoteText(
+                        "Suggested ₹ is a sizing band from the pool, not a directive. " +
+                            Compliance.OVERLAY_NEEDS_CASH
                     )
                 }
             }
 
+            item { SectionHeader("Notifications") }
+
             item {
-                SectionCard(title = "Sizing") {
-                    Column {
-                        EditableField(
-                            label = "Available lumpsum pool (₹)",
-                            initial = "%.0f".format(state.settings.availableLumpsum),
-                            numeric = true,
-                            onCommit = { value ->
-                                value.toDoubleOrNull()?.let(viewModel::setLumpsum)
-                            },
-                        )
-                        Spacer(Modifier.height(10.dp))
-                        EditableField(
-                            label = "What-if lumpsum (₹)",
-                            initial = "%.0f".format(state.settings.whatIfAmount),
-                            numeric = true,
-                            onCommit = { value ->
-                                value.toDoubleOrNull()?.let(viewModel::setWhatIf)
-                            },
-                        )
-                        Spacer(Modifier.height(10.dp))
-                        FootnoteText(
-                            "Suggested ₹ is a sizing band from the pool, not a directive. " +
-                                Compliance.OVERLAY_NEEDS_CASH
+                MizanCard {
+                    ToggleRow(
+                        "All notifications",
+                        state.settings.notificationsEnabled,
+                        viewModel::setNotificationsEnabled,
+                    )
+                    ToggleRow(
+                        "Fund dips",
+                        state.settings.notifyFundDips,
+                        viewModel::setNotifyFunds,
+                        supporting = "65+, watchlist only",
+                    )
+                    ToggleRow(
+                        "Metal dips",
+                        state.settings.notifyMetalDips,
+                        viewModel::setNotifyMetals,
+                        supporting = "65+",
+                    )
+                    ToggleRow(
+                        "Gold drop",
+                        state.settings.notifyGoldDrop,
+                        viewModel::setNotifyGoldDrop,
+                        supporting = "₹10,000 off the 60-day high",
+                    )
+                    if (!state.notificationsAllowed) {
+                        Spacer(Modifier.height(Space.sm))
+                        Text(
+                            "Android is blocking notifications for Mizan. Scores still appear in " +
+                                "the app either way.",
+                            style = TextRole.secondary,
+                            color = MaterialTheme.colorScheme.error,
                         )
                     }
+                    Spacer(Modifier.height(Space.sm))
+                    FootnoteText(
+                        "Neutral days (50-64) never notify. The same level inside 7 days stays quiet."
+                    )
                 }
             }
 
+            item { SectionHeader("Updates") }
+
+            item { UpdatesCard(state, viewModel) }
+
+            item { SectionHeader("Privacy") }
+
             item {
-                SectionCard(title = "Notifications") {
-                    Column {
-                        ToggleRow(
-                            "All notifications",
-                            state.settings.notificationsEnabled,
-                            viewModel::setNotificationsEnabled,
-                        )
-                        ToggleRow(
-                            "Fund dips (65+, watchlist only)",
-                            state.settings.notifyFundDips,
-                            viewModel::setNotifyFunds,
-                        )
-                        ToggleRow(
-                            "Metal dips (65+)",
-                            state.settings.notifyMetalDips,
-                            viewModel::setNotifyMetals,
-                        )
-                        ToggleRow(
-                            "Gold ₹10,000 off the 60-day high",
-                            state.settings.notifyGoldDrop,
-                            viewModel::setNotifyGoldDrop,
-                        )
-                        if (!state.notificationsAllowed) {
-                            Spacer(Modifier.height(8.dp))
-                            Text(
-                                "Android is blocking notifications for Mizan. Enable them in system " +
-                                    "settings; scores still appear in the app either way.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.error,
-                            )
-                        }
-                        Spacer(Modifier.height(8.dp))
-                        FootnoteText(
-                            "Neutral days (50-64) never notify. Same level inside 7 days stays quiet."
-                        )
+                MizanCard {
+                    FootnoteText(Compliance.PRIVACY)
+                    Spacer(Modifier.height(Space.md))
+                    OutlinedButton(onClick = { requestIgnoreBatteryOptimizations(context) }) {
+                        Text("Battery settings")
                     }
+                    Spacer(Modifier.height(Space.sm))
+                    FootnoteText(
+                        "Samsung, Xiaomi and Vivo can kill background jobs. If daily updates stop " +
+                            "arriving, allow background activity for Mizan."
+                    )
                 }
             }
 
-            item {
-                SectionCard(title = "Background updates") {
-                    Column {
-                        KeyValueRow("Daily window", "21:00 IST (retry 07:00 IST)")
-                        KeyValueRow("Last job", state.lastJob?.name ?: "never run")
-                        KeyValueRow("Finished", Formatters.dateTime(state.lastJob?.at))
-                        KeyValueRow("Status", state.lastJob?.status ?: "--")
-                        KeyValueRow(
-                            "Duration",
-                            state.lastJob?.durationSeconds?.let { "${it}s" } ?: "--",
-                        )
-                        KeyValueRow("Funds updated", Formatters.count(state.lastJob?.fundsFetched ?: 0))
-                        KeyValueRow("Signals written", Formatters.count(state.lastJob?.signalsWritten ?: 0))
-                        KeyValueRow("Notifies posted", Formatters.count(state.lastJob?.notifiesPosted ?: 0))
-                        if (state.lastJob?.error != null) {
-                            Spacer(Modifier.height(6.dp))
-                            Text(
-                                state.lastJob?.error.orEmpty(),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.error,
-                            )
-                        }
-                        Spacer(Modifier.height(12.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(onClick = viewModel::runUpdateNow) { Text("Run update now") }
-                            OutlinedButton(
-                                onClick = viewModel::reloadHistory,
-                                enabled = !state.backfillRunning,
-                            ) {
-                                Text(if (state.backfillRunning) "Loading…" else "Reload history")
-                            }
-                        }
-                    }
-                }
-            }
-
-            item {
-                SectionCard(title = "Help: background limits") {
-                    Column {
-                        FootnoteText(
-                            "Samsung, Xiaomi and Vivo can kill background jobs. If daily updates " +
-                                "stop arriving, allow background activity or autostart for Mizan " +
-                                "and exclude it from battery optimisation."
-                        )
-                        Spacer(Modifier.height(10.dp))
-                        OutlinedButton(onClick = { requestIgnoreBatteryOptimizations(context) }) {
-                            Text("Battery settings")
-                        }
-                    }
-                }
-            }
-
-            item {
-                SectionCard(title = "Privacy") {
-                    Column {
-                        FootnoteText(Compliance.PRIVACY)
-                        Spacer(Modifier.height(8.dp))
-                        FootnoteText(Compliance.DISCLAIMER)
-                    }
-                }
-            }
-
-            item { Spacer(Modifier.height(24.dp)) }
+            item { Spacer(Modifier.height(Space.xl)) }
         }
     }
 }
 
 @Composable
-private fun ToggleRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-        Switch(checked = checked, onCheckedChange = onChange)
+private fun UpdatesCard(state: AccountUiState, viewModel: AccountViewModel) {
+    var diagnosticsOpen by remember { mutableStateOf(false) }
+    MizanCard {
+        Text(
+            "Daily at 21:00 IST, retried at 07:00 IST.",
+            style = TextRole.secondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(Space.xs))
+        Text(
+            "Last run ${Formatters.dateTime(state.lastJob?.at)} · " +
+                (state.lastJob?.status ?: "never run"),
+            style = TextRole.secondary,
+        )
+        val error = state.lastJob?.error
+        if (error != null) {
+            Spacer(Modifier.height(Space.xs))
+            Text(
+                error,
+                style = TextRole.secondary,
+                color = MaterialTheme.colorScheme.error,
+            )
+        }
+
+        Spacer(Modifier.height(Space.md))
+        Row(horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
+            Button(onClick = viewModel::runUpdateNow) { Text("Run update now") }
+            OutlinedButton(
+                onClick = viewModel::reloadHistory,
+                enabled = !state.backfillRunning,
+            ) {
+                Text(if (state.backfillRunning) "Loading…" else "Reload history")
+            }
+        }
+
+        Spacer(Modifier.height(Space.sm))
+        HorizontalDivider()
+        ListItem(
+            modifier = Modifier.clickable { diagnosticsOpen = !diagnosticsOpen },
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+            headlineContent = { Text("Diagnostics", style = TextRole.body) },
+            trailingContent = {
+                Icon(
+                    if (diagnosticsOpen) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                    contentDescription = if (diagnosticsOpen) "Hide" else "Show",
+                )
+            },
+        )
+        AnimatedVisibility(visible = diagnosticsOpen) {
+            Column(Modifier.fillMaxWidth()) {
+                DataRow("Job", state.lastJob?.name ?: "--")
+                DataRow(
+                    "Duration",
+                    state.lastJob?.durationSeconds?.let { "${it}s" } ?: "--",
+                )
+                DataRow("Funds updated", Formatters.count(state.lastJob?.fundsFetched ?: 0))
+                DataRow("Signals written", Formatters.count(state.lastJob?.signalsWritten ?: 0))
+                DataRow("Notifies posted", Formatters.count(state.lastJob?.notifiesPosted ?: 0))
+            }
+        }
     }
+}
+
+@Composable
+private fun ToggleRow(
+    label: String,
+    checked: Boolean,
+    onChange: (Boolean) -> Unit,
+    supporting: String? = null,
+) {
+    ListItem(
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        headlineContent = { Text(label, style = TextRole.body) },
+        supportingContent = supporting?.let {
+            {
+                Text(
+                    it,
+                    style = TextRole.caption,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        },
+        trailingContent = { Switch(checked = checked, onCheckedChange = onChange) },
+    )
 }
 
 @Composable
@@ -241,6 +282,7 @@ private fun EditableField(
         },
         label = { Text(label) },
         singleLine = true,
+        shape = Shapes.field,
         keyboardOptions = if (numeric) {
             KeyboardOptions(keyboardType = KeyboardType.Number)
         } else {

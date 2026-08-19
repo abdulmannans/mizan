@@ -45,7 +45,13 @@ class MizanNotifier @Inject constructor(private val context: Context) {
             NotificationManager.IMPORTANCE_LOW,
         ).apply { description = "History loading and daily price updates." }
 
-        manager.createNotificationChannels(listOf(dips, gold, jobs))
+        val daily = NotificationChannel(
+            CHANNEL_DAILY,
+            "Daily market summary",
+            NotificationManager.IMPORTANCE_DEFAULT,
+        ).apply { description = "Quiet end-of-day summary of all fund scores." }
+
+        manager.createNotificationChannels(listOf(dips, gold, jobs, daily))
     }
 
     fun canPost(): Boolean = manager.areNotificationsEnabled()
@@ -112,6 +118,25 @@ class MizanNotifier @Inject constructor(private val context: Context) {
             .setSilent(true)
             .build()
 
+    fun notifyDailySummary(scores: List<Pair<String, Int>>, attractiveCount: Int) {
+        val title = if (attractiveCount > 0) {
+            "$attractiveCount fund${if (attractiveCount > 1) "s" else ""} attractive today"
+        } else {
+            "Daily summary — all calm"
+        }
+        val body = scores.joinToString(", ") { "${it.first} ${it.second}" }
+            .ifEmpty { "No scored funds yet." }
+        val notification = NotificationCompat.Builder(context, CHANNEL_DAILY)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(title)
+            .setContentText(body)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+            .setAutoCancel(true)
+            .setContentIntent(routeIntent("home"))
+            .build()
+        safeNotify(ID_DAILY_SUMMARY, notification)
+    }
+
     fun notifyJobFailure() {
         val notification = NotificationCompat.Builder(context, CHANNEL_JOBS)
             .setSmallIcon(R.drawable.ic_notification)
@@ -166,6 +191,7 @@ class MizanNotifier @Inject constructor(private val context: Context) {
         const val CHANNEL_DIPS = "mizan.dips"
         const val CHANNEL_GOLD = "mizan.gold"
         const val CHANNEL_JOBS = "mizan.jobs"
+        const val CHANNEL_DAILY = "mizan.daily"
 
         const val GROUP_DIPS = "mizan.dips"
         const val EXTRA_ROUTE = "mizan_route"
@@ -174,6 +200,7 @@ class MizanNotifier @Inject constructor(private val context: Context) {
         const val ID_GROUP_SUMMARY = 1002
         const val ID_GOLD_DROP = 1003
         const val ID_JOB_FAILURE = 1004
+        const val ID_DAILY_SUMMARY = 1005
 
         fun fundNotificationId(schemeCode: Long): Int = (2_000_000 + schemeCode).toInt()
         fun metalNotificationId(metalId: String): Int = 3_000_000 + metalId.hashCode() % 1000

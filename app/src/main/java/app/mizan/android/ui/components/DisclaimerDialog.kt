@@ -4,13 +4,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import app.mizan.android.core.Compliance
+import app.mizan.android.ui.theme.Space
+import app.mizan.android.ui.theme.TextRole
 
 @Composable
 fun DisclaimerDialog(onDismiss: () -> Unit) {
@@ -20,13 +20,13 @@ fun DisclaimerDialog(onDismiss: () -> Unit) {
         title = { Text("Important") },
         text = {
             Column {
-                Text(Compliance.DISCLAIMER, style = MaterialTheme.typography.bodyMedium)
-                Spacer(Modifier.height(12.dp))
-                Text(Compliance.AMFI_NAMING, style = MaterialTheme.typography.bodySmall)
-                Spacer(Modifier.height(12.dp))
-                Text(Compliance.HYPOTHETICAL, style = MaterialTheme.typography.bodySmall)
-                Spacer(Modifier.height(12.dp))
-                Text(Compliance.METAL_QUOTES, style = MaterialTheme.typography.bodySmall)
+                Text(Compliance.DISCLAIMER, style = TextRole.body)
+                Spacer(Modifier.height(Space.md))
+                Text(Compliance.AMFI_NAMING, style = TextRole.secondary)
+                Spacer(Modifier.height(Space.md))
+                Text(Compliance.HYPOTHETICAL, style = TextRole.secondary)
+                Spacer(Modifier.height(Space.md))
+                Text(Compliance.METAL_QUOTES, style = TextRole.secondary)
             }
         },
     )

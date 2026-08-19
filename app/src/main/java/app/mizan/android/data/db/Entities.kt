@@ -62,8 +62,6 @@ data class InvestmentSignalEntity(
 @Entity(tableName = "watchlist")
 data class WatchlistItemEntity(
     @PrimaryKey val schemeCode: Long,
-    val sipAmount: Double? = null,
-    val sipDayOfMonth: Int? = null,
     val addedAt: Long,
 )
 

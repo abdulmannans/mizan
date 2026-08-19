@@ -145,6 +145,7 @@ class MarketPipeline @Inject constructor(
 
         signalsWritten += refreshMetals(errors)
         val notifies = notifyLatest(errors)
+        postDailySummary()
 
         return PipelineResult(
             fundsFetched = fundsFetched,
@@ -373,6 +374,19 @@ class MarketPipeline @Inject constructor(
             )
         )
         return true
+    }
+
+    private suspend fun postDailySummary() {
+        val prefs = settings.current()
+        if (!prefs.notificationsEnabled || !notifier.canPost()) return
+        val funds = database.fundDao().tracked()
+        val scores = funds.mapNotNull { fund ->
+            database.signalDao().latestForFund(fund.schemeCode)?.let { signal ->
+                fund.shortName to signal.score
+            }
+        }
+        val attractiveCount = scores.count { it.second >= Level.ATTRACTIVE_SCORE }
+        notifier.notifyDailySummary(scores, attractiveCount)
     }
 
     // --- notifications ----------------------------------------------------------------------

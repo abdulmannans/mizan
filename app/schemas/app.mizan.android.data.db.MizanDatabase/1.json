@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "e483a2aecf5c0d279d85cbeae599176d",
+    "identityHash": "5df899967cd042f9adbd7f4d6f68a696",
     "entities": [
       {
         "tableName": "funds",
@@ -224,23 +224,13 @@
       },
       {
         "tableName": "watchlist",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`schemeCode` INTEGER NOT NULL, `sipAmount` REAL, `sipDayOfMonth` INTEGER, `addedAt` INTEGER NOT NULL, PRIMARY KEY(`schemeCode`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`schemeCode` INTEGER NOT NULL, `addedAt` INTEGER NOT NULL, PRIMARY KEY(`schemeCode`))",
         "fields": [
           {
             "fieldPath": "schemeCode",
             "columnName": "schemeCode",
             "affinity": "INTEGER",
             "notNull": true
-          },
-          {
-            "fieldPath": "sipAmount",
-            "columnName": "sipAmount",
-            "affinity": "REAL"
-          },
-          {
-            "fieldPath": "sipDayOfMonth",
-            "columnName": "sipDayOfMonth",
-            "affinity": "INTEGER"
           },
           {
             "fieldPath": "addedAt",
@@ -600,7 +590,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e483a2aecf5c0d279d85cbeae599176d')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '5df899967cd042f9adbd7f4d6f68a696')"
     ]
   }
 }

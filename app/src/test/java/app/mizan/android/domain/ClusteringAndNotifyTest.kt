@@ -4,7 +4,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.time.DayOfWeek
 import java.time.LocalDate
 
 class DipClusteringTest {
@@ -84,33 +83,6 @@ class NotifyRulesTest {
                 LastNotification(today.minusDays(2), Level.ATTRACTIVE),
             )
         )
-    }
-}
-
-class SipAllotmentTest {
-
-    @Test
-    fun `allotment is two business days after a midweek debit`() {
-        val debit = LocalDate.of(2026, 8, 18)
-        assertEquals(DayOfWeek.TUESDAY, debit.dayOfWeek)
-        assertEquals(LocalDate.of(2026, 8, 20), SipAllotment.estimatedAllotmentDate(debit))
-    }
-
-    @Test
-    fun `a friday debit is capped at the three day lag`() {
-        val friday = LocalDate.of(2026, 8, 21)
-        assertEquals(DayOfWeek.FRIDAY, friday.dayOfWeek)
-        val allotment = SipAllotment.estimatedAllotmentDate(friday)
-        assertEquals(LocalDate.of(2026, 8, 24), allotment)
-        assertEquals(DayOfWeek.MONDAY, allotment.dayOfWeek)
-    }
-
-    @Test
-    fun `next debit rolls into the following month once the day has passed`() {
-        val today = LocalDate.of(2026, 8, 18)
-        assertEquals(LocalDate.of(2026, 8, 25), SipAllotment.nextDebitDate(25, today))
-        assertEquals(LocalDate.of(2026, 9, 5), SipAllotment.nextDebitDate(5, today))
-        assertEquals(today, SipAllotment.nextDebitDate(18, today))
     }
 }
 

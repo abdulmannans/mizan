@@ -21,7 +21,6 @@ import app.mizan.android.domain.MissedTotals
 import app.mizan.android.domain.NotifyRules
 import app.mizan.android.domain.PricePoint
 import app.mizan.android.domain.ScoreComponents
-import app.mizan.android.domain.SipAllotment
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -35,8 +34,6 @@ data class FundRow(
     val fund: FundEntity,
     val latestSignal: InvestmentSignalEntity?,
     val watchlisted: Boolean,
-    val sipAmount: Double?,
-    val sipDayOfMonth: Int?,
 ) {
     val score: Int? get() = latestSignal?.score
     val level: Level? get() = latestSignal?.let { Level.fromKey(it.level) }
@@ -54,17 +51,6 @@ data class MetalRow(
     val score: Int? get() = latestSignal?.score
     val level: Level? get() = latestSignal?.let { Level.fromKey(it.level) }
 }
-
-data class NextSip(
-    val fundName: String,
-    val schemeCode: Long,
-    val amount: Double,
-    val debitDay: Int,
-    val debitDate: LocalDate,
-    val allotmentDate: LocalDate,
-    val estimatedAllotmentNav: Double?,
-    val latestNav: Double?,
-)
 
 data class LastJob(
     val name: String,
@@ -87,7 +73,6 @@ data class HomeState(
     val silver: MetalRow? = null,
     val watchlistToday: List<FundRow> = emptyList(),
     val missedTotals: MissedTotals? = null,
-    val nextSip: NextSip? = null,
     val lastJob: LastJob? = null,
     val stale: Boolean = false,
     val settings: MizanSettings = MizanSettings(),
@@ -115,9 +100,6 @@ data class FundDetailState(
     val navSeries: List<PricePoint> = emptyList(),
     val signals: List<SignalView> = emptyList(),
     val watchlisted: Boolean = false,
-    val sipAmount: Double? = null,
-    val sipDayOfMonth: Int? = null,
-    val nextSip: NextSip? = null,
     val settings: MizanSettings = MizanSettings(),
 ) {
     val latest: SignalView? get() = signals.firstOrNull()
@@ -154,13 +136,10 @@ class MizanRepository @Inject constructor(
         val signalByFund = signals.associateBy { it.schemeCode }
         val watchByFund = watchlist.associateBy { it.schemeCode }
         funds.map { fund ->
-            val watch = watchByFund[fund.schemeCode]
             FundRow(
                 fund = fund,
                 latestSignal = signalByFund[fund.schemeCode],
-                watchlisted = watch != null,
-                sipAmount = watch?.sipAmount,
-                sipDayOfMonth = watch?.sipDayOfMonth,
+                watchlisted = watchByFund.containsKey(fund.schemeCode),
             )
         }
     }
@@ -191,7 +170,6 @@ class MizanRepository @Inject constructor(
             gold = metals.firstOrNull { it.metal.id == METAL_GOLD },
             silver = metals.firstOrNull { it.metal.id != METAL_GOLD },
             watchlistToday = watchlisted,
-            nextSip = nextSip(watchlisted),
             lastJob = lastJob?.toLastJob(),
             stale = isStale(lastJob),
             settings = prefs,
@@ -252,9 +230,6 @@ class MizanRepository @Inject constructor(
             navSeries = series,
             signals = signals.map { it.toView() },
             watchlisted = watch != null,
-            sipAmount = watch?.sipAmount,
-            sipDayOfMonth = watch?.sipDayOfMonth,
-            nextSip = fund?.let { nextSipFor(it, watch, series) },
             settings = prefs,
         )
     }
@@ -283,6 +258,8 @@ class MizanRepository @Inject constructor(
     fun observeRecentJobs(): Flow<List<LastJob>> =
         database.jobRunDao().observeRecent().map { runs -> runs.map { it.toLastJob() } }
 
+    suspend fun latestFundNavDate(): LocalDate? = database.fundPriceDao().latestDateAnyFund()
+
     suspend fun addToWatchlist(schemeCode: Long) {
         val existing = database.watchlistDao().all().firstOrNull { it.schemeCode == schemeCode }
         if (existing != null) return
@@ -295,59 +272,6 @@ class MizanRepository @Inject constructor(
 
     suspend fun toggleWatchlist(schemeCode: Long, watchlisted: Boolean) {
         if (watchlisted) removeFromWatchlist(schemeCode) else addToWatchlist(schemeCode)
-    }
-
-    suspend fun saveSip(schemeCode: Long, amount: Double?, dayOfMonth: Int?) {
-        val existing = database.watchlistDao().all().firstOrNull { it.schemeCode == schemeCode }
-        database.watchlistDao().upsert(
-            WatchlistItemEntity(
-                schemeCode = schemeCode,
-                sipAmount = amount,
-                sipDayOfMonth = dayOfMonth,
-                addedAt = existing?.addedAt ?: IndiaClock.nowMillis(),
-            )
-        )
-    }
-
-    private fun nextSip(rows: List<FundRow>): NextSip? = rows
-        .filter { it.sipAmount != null && it.sipDayOfMonth != null }
-        .mapNotNull { row ->
-            val debitDate = SipAllotment.nextDebitDate(row.sipDayOfMonth!!, IndiaClock.today())
-            NextSip(
-                fundName = row.fund.shortName,
-                schemeCode = row.fund.schemeCode,
-                amount = row.sipAmount!!,
-                debitDay = row.sipDayOfMonth,
-                debitDate = debitDate,
-                allotmentDate = SipAllotment.estimatedAllotmentDate(debitDate),
-                estimatedAllotmentNav = null,
-                latestNav = row.fund.lastNav,
-            )
-        }
-        .minByOrNull { it.debitDate }
-
-    private fun nextSipFor(
-        fund: FundEntity,
-        watch: WatchlistItemEntity?,
-        series: List<PricePoint>,
-    ): NextSip? {
-        val amount = watch?.sipAmount ?: return null
-        val day = watch.sipDayOfMonth ?: return null
-        val debitDate = SipAllotment.nextDebitDate(day, IndiaClock.today())
-        val allotmentDate = SipAllotment.estimatedAllotmentDate(debitDate)
-        // Allotment NAV is the NAV on the allotment date, which for a future debit is unknown --
-        // the best available proxy is the last published NAV.
-        val allotmentNav = series.lastOrNull { !it.date.isAfter(allotmentDate) }?.value
-        return NextSip(
-            fundName = fund.shortName,
-            schemeCode = fund.schemeCode,
-            amount = amount,
-            debitDay = day,
-            debitDate = debitDate,
-            allotmentDate = allotmentDate,
-            estimatedAllotmentNav = allotmentNav,
-            latestNav = fund.lastNav,
-        )
     }
 
     private fun isStale(lastJob: JobRunEntity?): Boolean {
